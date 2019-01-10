@@ -1,0 +1,12 @@
+import "stdlib.imgql"
+
+load chess1f = "chess2x2-piccola.png"
+let chess1 = intensity(chess1f)
+
+let similarToTrue(a,radius) = crossCorrelation(radius,a,a,a >=. 0,0,256,10)
+
+let simChess1 = similarToTrue(chess1,5)
+
+save "output/simchess1-piccola-VoxLogica.png" (150 .* simChess1)
+save "chess2x2-piccola.nii" chess1
+save "output/simchess1-piccola-VoxLogica.nii" simChess1

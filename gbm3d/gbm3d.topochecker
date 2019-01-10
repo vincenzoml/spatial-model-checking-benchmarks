@@ -1,0 +1,68 @@
+Model "med:FLAIR=test3d.nii";
+
+Let reach(a,b) = !( (!b) S (!a) );
+Let touch(a,b) = a & reach(a|b,b);
+Let grow(a,b) = (a|b) S (!b);
+Let similar(a,b) = SCMP (FLAIR,a,5,>0.4,0,3.3,100) (FLAIR,b);
+Let verySimilar(a,b) = SCMP (FLAIR,a,5,>0.7,0,3.3,100) (FLAIR,b);
+Let similarB(a,b) = (SCMP (FLAIR,a,8,>0.5,0,3.3,100) (FLAIR,b));
+Let denoiseCoarse(a) = touch(a,(!MDDT(!a,<6)));
+Let flt2(a) = MDDT(!(MDDT(!a,<2)),<2);
+
+Let highIntensity = [FLAIR > 1.5];
+Let lowIntensity = [FLAIR < 0.4];
+
+Let background = MDDT(touch(!MDDT(!lowIntensity,<5),[border]),<5);
+Let head = !background;
+
+Let CSF = lowIntensity & head;
+Let CSFlarge = MDDT(CSF,<5.0);
+
+Let brain1 = (head & (!CSF)) S CSFlarge;
+Let brain2=flt2(brain1);
+Let brain3 = reach((!lowIntensity)|brain2,brain2) & head;
+Let brain4 = (!CSF) & reach((!CSF)|brain3,brain3) & head;
+Let brain = brain4 S brain3;
+
+Let ut = [FLAIR >= 1.47] & [FLAIR < 2.4] & brain;
+Let lt = [FLAIR > 1.17] & [FLAIR < 1.53] & brain;
+
+Let lt1 = flt2(lt);
+Let ut1 = flt2(ut);
+
+Let utdst = MDDT (ut1,<=2.0);
+Let tum1 = lt1 & reach(lt1,utdst);
+Let oed1 = ut1 & reach(utdst,tum1);
+
+Let tum2 = (SCMP (FLAIR,brain,5,>0.4,0,3.3,100) (FLAIR,tum1));
+Let oed2 = (SCMP (FLAIR,brain,5,>0.4,0,3.3,100) (FLAIR,oed1));
+
+Let tum31 = tum2 | tum1;
+Let oed31 = oed2 | oed1;
+
+Let tum3 = flt2(tum31);
+Let oed3 = flt2(oed31);
+
+Let oed3dst = MDDT (ut1,<=2.0);
+
+Let tumor = MAXVOL(tum3 & reach(tum3|oed3dst,oed3dst));
+Let oedema = MAXVOL(oed3 & reach(oed3dst|tum3,tum3));
+
+Output "output/topochecker-GBM3d-tum1.nii";
+Check "255" tum1;
+
+Output "output/topochecker-GBM3d-oed1.nii";
+Check "255" oed1;
+
+Output "output/topochecker-GBM3d-tum2.nii";
+Check "255" tum2;
+
+Output "output/topochecker-GBM3d-oed2.nii";
+Check "255" oed2;
+
+Output "output/topochecker-GBM3d-tumor.nii";
+Check "255" tumor;
+
+Output "output/topochecker-GBM3d-oedema.nii";
+Check "255" oedema;
+

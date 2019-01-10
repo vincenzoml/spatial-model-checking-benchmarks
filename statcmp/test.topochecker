@@ -1,0 +1,8 @@
+Model "med:CHESS=chess2x2-piccola.nii";
+
+Let similarToTrue = (SCMP (CHESS,TT,1,>0.8,0,256,10) (CHESS,TT));
+
+Let simChess1 = similarToTrue;
+
+Output "output/simchess1-piccola-topochecker.nii";
+Check "1" simChess1;
